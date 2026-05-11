@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}Laporan{% endblock %}
+{% block topbar_title %}Laporan Rekap PKL{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">📊 Laporan Rekap PKL</h1>
+    <p class="page-subtitle">Ringkasan kehadiran dan aktivitas seluruh siswa PKL</p>
+  </div>
+  <button class="btn btn-accent" onclick="window.print()">🖨️ Cetak</button>
+</div>
+
+<!-- REKAP TABLE -->
+<div class="card" style="margin-bottom:28px;">
+  <div class="card-header">
+    <span class="card-title">📋 Rekap Presensi Per Siswa</span>
+    <span style="font-size:.8rem;color:#64748b;">{{ rekap|length }} siswa</span>
+  </div>
+  <div class="card-body" style="padding:0;">
+    <div class="table-wrap">
+      {% if rekap %}
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Nama Siswa</th>
+            <th>Kelas</th>
+            <th style="text-align:center;">✅ Hadir</th>
+            <th style="text-align:center;">🤒 Sakit</th>
+            <th style="text-align:center;">📝 Izin</th>
+            <th style="text-align:center;">❌ Alpha</th>
+            <th style="text-align:center;">Total</th>
+            <th style="text-align:center;">% Hadir</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rekap %}
+          {% set pct = ((row.hadir / row.total * 100)|round(1)) if row.total > 0 else 0 %}
+          <tr>
+            <td style="color:#94a3b8;">{{ loop.index }}</td>
+            <td style="font-weight:600;">{{ row.nama }}</td>
+            <td><span style="font-size:.78rem;background:#f1f5f9;padding:2px 8px;border-radius:6px;">{{ row.kelas or '-' }}</span></td>
+            <td style="text-align:center;">
+              <span class="badge badge-hadir">{{ row.hadir }}</span>
+            </td>
+            <td style="text-align:center;">
+              <span class="badge badge-sakit">{{ row.sakit }}</span>
+            </td>
+            <td style="text-align:center;">
+              <span class="badge badge-izin">{{ row.izin }}</span>
+            </td>
+            <td style="text-align:center;">
+              <span class="badge badge-alpha">{{ row.alpha }}</span>
+            </td>
+            <td style="text-align:center;font-weight:600;">{{ row.total }}</td>
+            <td style="text-align:center;">
+              <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+                <div style="width:60px;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:{{ pct }}%;background:{% if pct>=80 %}#22c55e{% elif pct>=60 %}#eab308{% else %}#ef4444{% endif %};border-radius:3px;"></div>
+                </div>
+                <span style="font-size:.82rem;font-weight:600;">{{ pct }}%</span>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="text-align:center;padding:48px;color:#94a3b8;">
+        <div style="font-size:3rem;margin-bottom:12px;">📊</div>
+        <p style="font-weight:600;">Belum ada data presensi</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PRESENSI SEMUA -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">📅 Detail Semua Presensi</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <input type="text" id="searchPresensi" placeholder="🔍 Cari..." style="width:200px;padding:7px 12px;font-size:.8rem;"
+             oninput="filterPresensi()">
+      <span style="font-size:.8rem;color:#64748b;">{{ semua|length }} entri</span>
+    </div>
+  </div>
+  <div class="card-body" style="padding:0;">
+    <div class="table-wrap">
+      {% if semua %}
+      <table id="presensiTable">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Nama</th>
+            <th>Kelas</th>
+            <th>Tanggal</th>
+            <th>Status</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in semua %}
+          <tr>
+            <td style="color:#94a3b8;">{{ loop.index }}</td>
+            <td style="font-weight:600;">{{ row.nama }}</td>
+            <td><span style="font-size:.78rem;background:#f1f5f9;padding:2px 8px;border-radius:6px;">{{ row.kelas or '-' }}</span></td>
+            <td style="font-family:'Space Grotesk',sans-serif;white-space:nowrap;">{{ row.tanggal }}</td>
+            <td>
+              {% set s = row.status %}
+              <span class="badge badge-{{ s|lower }}">
+                {% if s=='Hadir' %}✅{% elif s=='Sakit' %}🤒{% elif s=='Izin' %}📝{% else %}❌{% endif %}
+                {{ s }}
+              </span>
+            </td>
+            <td style="color:#64748b;font-size:.85rem;">{{ row.keterangan or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="text-align:center;padding:48px;color:#94a3b8;">
+        <p>Belum ada data presensi</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+@media print {
+  .sidebar, .topbar, .page-header .btn, #searchPresensi { display: none !important; }
+  .main-wrapper { margin-left: 0 !important; }
+  .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterPresensi() {
+  const q = document.getElementById('searchPresensi').value.toLowerCase();
+  document.querySelectorAll('#presensiTable tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

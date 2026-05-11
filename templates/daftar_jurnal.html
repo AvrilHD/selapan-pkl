@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block title %}Daftar Jurnal{% endblock %}
+{% block topbar_title %}Daftar Jurnal Kegiatan{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">📖 Daftar Jurnal</h1>
+    <p class="page-subtitle">
+      {% if user.role in ('admin','guru') %}Semua jurnal kegiatan siswa PKL{% else %}Riwayat jurnal kegiatan PKL Anda{% endif %}
+    </p>
+  </div>
+  <a href="{{ url_for('jurnal') }}" class="btn btn-accent">✏️ Tulis Jurnal Baru</a>
+</div>
+
+{% if data %}
+  <!-- Filter / Search -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="padding:16px 20px;">
+      <input type="text" id="searchInput" placeholder="🔍 Cari berdasarkan kegiatan, nama, tanggal..."
+             style="max-width:400px;" oninput="filterTable()">
+    </div>
+  </div>
+
+  <!-- JURNAL CARDS or TABLE -->
+  {% if user.role in ('admin','guru') %}
+  <!-- TABLE VIEW untuk admin/guru -->
+  <div class="card">
+    <div class="card-body" style="padding:0;">
+      <div class="table-wrap">
+        <table id="jurnalTable">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Nama Siswa</th>
+              <th>Kelas</th>
+              <th>Tanggal</th>
+              <th>Kegiatan</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in data %}
+            <tr>
+              <td style="color:#94a3b8;">{{ loop.index }}</td>
+              <td style="font-weight:600;">{{ row.nama }}</td>
+              <td><span style="font-size:.78rem;background:#f1f5f9;padding:2px 8px;border-radius:6px;">{{ row.kelas or '-' }}</span></td>
+              <td style="font-family:'Space Grotesk',sans-serif;white-space:nowrap;">{{ row.tanggal }}</td>
+              <td style="max-width:300px;font-size:.85rem;">{{ row.kegiatan[:80] }}{% if row.kegiatan|length > 80 %}...{% endif %}</td>
+              <td>
+                <button class="btn btn-outline btn-sm" onclick="showDetail({{ loop.index0 }})">Lihat</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL DATA -->
+  <script>
+    const jurnalData = [
+      {% for row in data %}
+      {
+        nama: {{ row.nama|tojson }},
+        kelas: {{ (row.kelas or '-')|tojson }},
+        tanggal: {{ row.tanggal|tojson }},
+        kegiatan: {{ row.kegiatan|tojson }},
+        hasil: {{ (row.hasil or '-')|tojson }},
+        kendala: {{ (row.kendala or '-')|tojson }},
+        solusi: {{ (row.solusi or '-')|tojson }},
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ];
+  </script>
+
+  {% else %}
+  <!-- CARD VIEW untuk siswa -->
+  <div id="jurnalCards" style="display:flex;flex-direction:column;gap:16px;">
+    {% for row in data %}
+    <div class="card jurnal-card" data-search="{{ row.kegiatan|lower }} {{ row.tanggal }}">
+      <div class="card-header">
+        <div>
+          <span style="font-family:'Space Grotesk',sans-serif;font-weight:600;">{{ row.tanggal }}</span>
+          <span style="font-size:.78rem;color:#64748b;margin-left:10px;">Jurnal #{{ loop.index }}</span>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="toggleCard(this)">🔽 Buka</button>
+      </div>
+      <div class="jurnal-detail" style="display:none;">
+        <div class="card-body">
+          <div style="display:grid;gap:16px;">
+            <div>
+              <div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">📌 Kegiatan</div>
+              <p style="font-size:.9rem;line-height:1.7;white-space:pre-wrap;">{{ row.kegiatan }}</p>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div>
+                <div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">✅ Hasil</div>
+                <p style="font-size:.88rem;line-height:1.6;white-space:pre-wrap;">{{ row.hasil or '—' }}</p>
+              </div>
+              <div>
+                <div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">⚠️ Kendala</div>
+                <p style="font-size:.88rem;line-height:1.6;white-space:pre-wrap;">{{ row.kendala or '—' }}</p>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">💡 Solusi</div>
+              <p style="font-size:.88rem;line-height:1.6;white-space:pre-wrap;">{{ row.solusi or '—' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+{% else %}
+<div class="card">
+  <div class="card-body" style="text-align:center;padding:60px 24px;">
+    <div style="font-size:3.5rem;margin-bottom:16px;">📖</div>
+    <h3 style="font-family:'Space Grotesk',sans-serif;margin-bottom:8px;">Belum Ada Jurnal</h3>
+    <p style="color:#64748b;font-size:.9rem;margin-bottom:20px;">Mulai tulis jurnal pertama Anda hari ini!</p>
+    <a href="{{ url_for('jurnal') }}" class="btn btn-accent">✏️ Tulis Jurnal Sekarang</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- MODAL -->
+<div id="detailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;width:90%;max-width:600px;max-height:85vh;overflow-y:auto;padding:28px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 style="font-family:'Space Grotesk',sans-serif;" id="modal-title">Detail Jurnal</h3>
+      <button onclick="closeModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleCard(btn) {
+  const card = btn.closest('.card');
+  const detail = card.querySelector('.jurnal-detail');
+  const open = detail.style.display === 'block';
+  detail.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? '🔽 Buka' : '🔼 Tutup';
+}
+
+function showDetail(idx) {
+  const d = jurnalData[idx];
+  document.getElementById('modal-title').textContent = `Jurnal ${d.nama} — ${d.tanggal}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="margin-bottom:12px;">
+      <span style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Siswa / Kelas</span>
+      <p style="margin-top:4px;font-weight:600;">${d.nama} · ${d.kelas}</p>
+    </div>
+    <div style="margin-bottom:12px;">
+      <span style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">📌 Kegiatan</span>
+      <p style="margin-top:4px;font-size:.9rem;line-height:1.7;white-space:pre-wrap;">${d.kegiatan}</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div>
+        <span style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">✅ Hasil</span>
+        <p style="margin-top:4px;font-size:.88rem;white-space:pre-wrap;">${d.hasil}</p>
+      </div>
+      <div>
+        <span style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">⚠️ Kendala</span>
+        <p style="margin-top:4px;font-size:.88rem;white-space:pre-wrap;">${d.kendala}</p>
+      </div>
+    </div>
+    <div>
+      <span style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">💡 Solusi</span>
+      <p style="margin-top:4px;font-size:.88rem;white-space:pre-wrap;">${d.solusi}</p>
+    </div>
+  `;
+  document.getElementById('detailModal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('detailModal').style.display = 'none';
+}
+
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  // Table rows
+  document.querySelectorAll('#jurnalTable tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+  // Cards
+  document.querySelectorAll('.jurnal-card').forEach(card => {
+    card.style.display = (card.dataset.search || '').includes(q) ? '' : 'none';
+  });
+}
+
+document.getElementById('detailModal')?.addEventListener('click', function(e){
+  if (e.target === this) closeModal();
+});
+</script>
+{% endblock %}

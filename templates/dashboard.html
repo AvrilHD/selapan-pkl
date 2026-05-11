@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Halo, {{ user.nama.split()[0] }}! 👋</h1>
+    <p class="page-subtitle">
+      {% if user.role == 'admin' %}Anda login sebagai Administrator · Kelola semua data sistem
+      {% elif user.role == 'guru' %}Anda login sebagai Guru Pembimbing
+      {% else %}Anda login sebagai Siswa PKL
+      {% if user.kelas %} · Kelas {{ user.kelas }}{% endif %}
+      {% endif %}
+    </p>
+  </div>
+  <a href="{{ url_for('presensi') }}" class="btn btn-accent">📋 Isi Presensi</a>
+</div>
+
+<!-- STATS -->
+<div class="stats-grid">
+  {% if user.role == 'admin' %}
+    <div class="stat-card">
+      <div class="stat-icon blue">👨‍🎓</div>
+      <div>
+        <div class="stat-value">{{ stats.total_siswa }}</div>
+        <div class="stat-label">Total Siswa PKL</div>
+      </div>
+    </div>
+    <div class="stat-card accent">
+      <div class="stat-icon yellow">👩‍🏫</div>
+      <div>
+        <div class="stat-value">{{ stats.total_guru }}</div>
+        <div class="stat-label">Guru Pembimbing</div>
+      </div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-icon green">📋</div>
+      <div>
+        <div class="stat-value">{{ stats.total_presensi }}</div>
+        <div class="stat-label">Data Presensi</div>
+      </div>
+    </div>
+    <div class="stat-card info">
+      <div class="stat-icon sky">📖</div>
+      <div>
+        <div class="stat-value">{{ stats.total_jurnal }}</div>
+        <div class="stat-label">Entri Jurnal</div>
+      </div>
+    </div>
+  {% else %}
+    <div class="stat-card success">
+      <div class="stat-icon green">✅</div>
+      <div>
+        <div class="stat-value">{{ stats.hadir }}</div>
+        <div class="stat-label">Hari Hadir</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon blue">📋</div>
+      <div>
+        <div class="stat-value">{{ stats.total_presensi }}</div>
+        <div class="stat-label">Total Presensi</div>
+      </div>
+    </div>
+    <div class="stat-card accent">
+      <div class="stat-icon yellow">📖</div>
+      <div>
+        <div class="stat-value">{{ stats.jurnal }}</div>
+        <div class="stat-label">Jurnal Ditulis</div>
+      </div>
+    </div>
+    <div class="stat-card info">
+      <div class="stat-icon sky">📅</div>
+      <div>
+        <div class="stat-value">{{ today }}</div>
+        <div class="stat-label">Tanggal Hari Ini</div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<!-- QUICK ACTION GRID -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">
+  <!-- Presensi -->
+  <div class="card" style="border-top:4px solid #0f4c81;">
+    <div class="card-body" style="display:flex;align-items:center;gap:18px;">
+      <div style="font-size:2.5rem;">📋</div>
+      <div style="flex:1;">
+        <div class="card-title" style="margin-bottom:6px;">Presensi Harian</div>
+        <p style="font-size:.82rem;color:#64748b;margin-bottom:14px;">
+          Catat kehadiran PKL hari ini dengan mudah
+        </p>
+        <a href="{{ url_for('presensi') }}" class="btn btn-primary btn-sm">Isi Presensi →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jurnal -->
+  <div class="card" style="border-top:4px solid #e8a020;">
+    <div class="card-body" style="display:flex;align-items:center;gap:18px;">
+      <div style="font-size:2.5rem;">✏️</div>
+      <div style="flex:1;">
+        <div class="card-title" style="margin-bottom:6px;">Jurnal Kegiatan</div>
+        <p style="font-size:.82rem;color:#64748b;margin-bottom:14px;">
+          Tulis laporan kegiatan PKL harian Anda
+        </p>
+        <a href="{{ url_for('jurnal') }}" class="btn btn-accent btn-sm">Tulis Jurnal →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daftar Jurnal -->
+  <div class="card" style="border-top:4px solid #1a7f4b;">
+    <div class="card-body" style="display:flex;align-items:center;gap:18px;">
+      <div style="font-size:2.5rem;">📖</div>
+      <div style="flex:1;">
+        <div class="card-title" style="margin-bottom:6px;">Daftar Jurnal</div>
+        <p style="font-size:.82rem;color:#64748b;margin-bottom:14px;">
+          Lihat riwayat jurnal kegiatan PKL
+        </p>
+        <a href="{{ url_for('daftar_jurnal') }}" class="btn btn-outline btn-sm">Lihat Daftar →</a>
+      </div>
+    </div>
+  </div>
+
+  {% if user.role in ('admin', 'guru') %}
+  <div class="card" style="border-top:4px solid #0284c7;">
+    <div class="card-body" style="display:flex;align-items:center;gap:18px;">
+      <div style="font-size:2.5rem;">📊</div>
+      <div style="flex:1;">
+        <div class="card-title" style="margin-bottom:6px;">Laporan Rekap</div>
+        <p style="font-size:.82rem;color:#64748b;margin-bottom:14px;">
+          Lihat rekap presensi dan jurnal semua siswa
+        </p>
+        <a href="{{ url_for('laporan') }}" class="btn btn-outline btn-sm" style="border-color:#0284c7;color:#0284c7;">Buka Laporan →</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- INFO BOX -->
+<div class="card" style="margin-top:24px;">
+  <div class="card-header">
+    <span class="card-title">📌 Informasi Sistem</span>
+  </div>
+  <div class="card-body" style="display:flex;flex-wrap:wrap;gap:24px;">
+    <div>
+      <div style="font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Role Anda</div>
+      <div style="margin-top:6px;">
+        <span class="user-role-badge role-{{ user.role }}" style="font-size:.85rem;padding:4px 14px;">{{ user.role|title }}</span>
+      </div>
+    </div>
+    {% if user.kelas %}
+    <div>
+      <div style="font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Kelas</div>
+      <div style="margin-top:6px;font-weight:600;">{{ user.kelas }}</div>
+    </div>
+    {% endif %}
+    <div>
+      <div style="font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Username</div>
+      <div style="margin-top:6px;font-weight:600;font-family:'Space Grotesk',sans-serif;">{{ user.username }}</div>
+    </div>
+    <div>
+      <div style="font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Akses Menu</div>
+      <div style="margin-top:6px;font-size:.82rem;">
+        {% if user.role == 'admin' %}Dashboard, Presensi, Jurnal, Daftar Jurnal, Laporan
+        {% elif user.role == 'guru' %}Dashboard, Presensi, Jurnal, Daftar Jurnal, Laporan
+        {% else %}Dashboard, Presensi, Jurnal, Daftar Jurnal
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.user-role-badge { display:inline-block; border-radius:20px; font-weight:600; }
+.role-admin  { background:#fbbf24;color:#78350f; }
+.role-guru   { background:#34d399;color:#065f46; }
+.role-siswa  { background:#93c5fd;color:#1e3a8a; }
+</style>
+{% endblock %}

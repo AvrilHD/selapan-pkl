@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Presensi{% endblock %}
+{% block topbar_title %}Presensi Harian{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">📋 Presensi Harian</h1>
+    <p class="page-subtitle">
+      {% if user.role in ('admin','guru') %}Lihat & kelola presensi semua siswa PKL
+      {% else %}Catat kehadiran PKL Anda hari ini
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+<!-- FORM ISI PRESENSI -->
+<div class="card" style="margin-bottom:28px;">
+  <div class="card-header">
+    <span class="card-title">✅ Isi Presensi</span>
+    <span style="font-size:.8rem;color:#64748b;">Presensi yang sama tanggalnya akan diperbarui</span>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('presensi') }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+        <div class="form-group">
+          <label for="tanggal">Tanggal</label>
+          <input type="date" id="tanggal" name="tanggal" value="{{ today }}" required>
+        </div>
+        <div class="form-group">
+          <label for="status">Status Kehadiran</label>
+          <select id="status" name="status" required>
+            <option value="" disabled selected>-- Pilih Status --</option>
+            <option value="Hadir">✅ Hadir</option>
+            <option value="Sakit">🤒 Sakit</option>
+            <option value="Izin">📝 Izin</option>
+            <option value="Alpha">❌ Alpha</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="keterangan">Keterangan (opsional)</label>
+        <input type="text" id="keterangan" name="keterangan"
+               placeholder="Contoh: Sakit demam, ada keperluan keluarga, dll.">
+      </div>
+      <button type="submit" class="btn btn-primary">💾 Simpan Presensi</button>
+    </form>
+  </div>
+</div>
+
+<!-- DATA TABEL -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">
+      {% if user.role in ('admin','guru') %}📊 Rekap Semua Presensi{% else %}📋 Riwayat Presensi Saya{% endif %}
+    </span>
+    <span style="font-size:.8rem;color:#64748b;">{{ data|length }} entri</span>
+  </div>
+  <div class="card-body" style="padding:0;">
+    <div class="table-wrap">
+      {% if data %}
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            {% if user.role in ('admin','guru') %}<th>Nama Siswa</th><th>Kelas</th>{% endif %}
+            <th>Tanggal</th>
+            <th>Status</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data %}
+          <tr>
+            <td style="color:#94a3b8;">{{ loop.index }}</td>
+            {% if user.role in ('admin','guru') %}
+            <td style="font-weight:600;">{{ row.nama }}</td>
+            <td><span style="font-size:.78rem;background:#f1f5f9;padding:2px 8px;border-radius:6px;">{{ row.kelas or '-' }}</span></td>
+            {% endif %}
+            <td style="font-family:'Space Grotesk',sans-serif;">{{ row.tanggal }}</td>
+            <td>
+              {% set s = row.status %}
+              <span class="badge badge-{{ s|lower }}">
+                {% if s=='Hadir' %}✅{% elif s=='Sakit' %}🤒{% elif s=='Izin' %}📝{% else %}❌{% endif %}
+                {{ s }}
+              </span>
+            </td>
+            <td style="color:#64748b;font-size:.85rem;">{{ row.keterangan or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="text-align:center;padding:48px;color:#94a3b8;">
+        <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+        <p style="font-weight:600;">Belum ada data presensi</p>
+        <p style="font-size:.85rem;margin-top:4px;">Isi form di atas untuk mulai mencatat kehadiran</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
